@@ -67,3 +67,12 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", 'django-insecure-default-key')
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+from django.core.management import call_command
+
+if os.getenv("RENDER") == "true":  # Only for Render deployment
+    try:
+        call_command("loaddata", "store/fixtures.json")
+        call_command("loaddata", "store/superuser.json")
+    except Exception as e:
+        print("Could not load fixtures:", e)
