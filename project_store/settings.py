@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-key'
 DEBUG = False
 ALLOWED_HOSTS = ['*']
 
@@ -63,7 +62,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", 'django-insecure-default-key')
 
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
