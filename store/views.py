@@ -2,10 +2,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from .models import Project, Payment
 import razorpay
+from django.contrib.auth.models import User
+from django.http import HttpResponse
 
 client = razorpay.Client(
     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
 )
+
+def create_superuser(request):
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            username="admin",
+            email="naveenpaul9940@gmail.com",
+            password="Naveenpaul9940_"
+        )
+        return HttpResponse("Superuser created!")
+    return HttpResponse("Superuser already exists.")
+
 
 def home(request):
     projects = Project.objects.all()
