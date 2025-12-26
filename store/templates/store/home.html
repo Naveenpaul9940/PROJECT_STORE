@@ -1,0 +1,10 @@
+<h1>Available Projects</h1>
+
+{% for p in projects %}
+  <div>
+    <img src="{{ p.thumbnail.url }}" width="200">
+    <h3>{{ p.title }}</h3>
+    <p>₹{{ p.price }}</p>
+    <a href="{% url 'pay' p.id %}">Buy Now</a>
+  </div>
+{% endfor %}
