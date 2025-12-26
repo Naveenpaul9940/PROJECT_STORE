@@ -5,9 +5,9 @@ import razorpay
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
-client = razorpay.Client(
-    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-)
+# Initialize Razorpay client
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
 
 def create_superuser(request):
     if not User.objects.filter(username="admin").exists():
@@ -28,11 +28,17 @@ def home(request):
 def pay(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    order = client.order.create({
-        'amount': project.price * 100,
-        'currency': 'INR',
-        'payment_capture': 1
-    })
+    # Amount in paise
+    amount_in_paise = int(project.price * 100)
+
+    try:
+        order = client.order.create({
+            'amount': amount_in_paise,
+            'currency': 'INR',
+            'payment_capture': 1
+        })
+    except razorpay.errors.BadRequestError as e:
+        return HttpResponse(f"Razorpay error: {str(e)}", status=500)
 
     payment = Payment.objects.create(
         project=project,
@@ -43,7 +49,8 @@ def pay(request, project_id):
     return render(request, 'store/payment.html', {
         'project': project,
         'order_id': order['id'],
-        'key': settings.RAZORPAY_KEY_ID
+        'key': settings.RAZORPAY_KEY_ID,
+        'amount_in_paise': amount_in_paise
     })
 
 
@@ -53,24 +60,21 @@ def payment_success(request):
         order_id = request.POST.get('razorpay_order_id')
         signature = request.POST.get('razorpay_signature')
 
-        payment = Payment.objects.get(razorpay_order_id=order_id)
+        payment = get_object_or_404(Payment, razorpay_order_id=order_id)
         payment.razorpay_payment_id = payment_id
         payment.razorpay_signature = signature
         payment.status = "SUCCESS"
         payment.save()
 
         return redirect('download', project_id=payment.project.id)
+    return redirect('home')
 
 
 def download(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-
-    paid = Payment.objects.filter(
-        project=project,
-        status="SUCCESS"
-    ).exists()
+    paid = Payment.objects.filter(project=project, status="SUCCESS").exists()
 
     if paid:
-        return redirect(project.drive_link)
+        return redirect(project.drive_link)  # direct download
     else:
         return redirect('home')
