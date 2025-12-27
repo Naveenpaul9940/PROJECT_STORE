@@ -4,3 +4,4 @@ gunicorn
 python-dotenv
 Pillow
 whitenoise
+mysqlclient

@@ -1,42 +1,248 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pay for {{ project.name }}</title>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-</head>
-<body>
-    <h1>Pay ₹{{ project.price }} for {{ project.name }}</h1>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment | EduStacker Solutions</title>
 
-    <button id="rzp-button">Pay ₹{{ project.price }}</button>
-
-    <form id="payment-form" method="POST" action="{% url 'payment_success' %}">
-      {% csrf_token %}
-      <input type="hidden" name="razorpay_payment_id">
-      <input type="hidden" name="razorpay_order_id">
-      <input type="hidden" name="razorpay_signature">
-    </form>
-
-    <script>
-        var options = {
-            "key": "{{ key }}",
-            "amount": "{{ amount_in_paise }}",
-            "currency": "INR",
-            "order_id": "{{ order_id }}",
-            "handler": function (response){
-                document.querySelector("[name=razorpay_payment_id]").value = response.razorpay_payment_id;
-                document.querySelector("[name=razorpay_order_id]").value = response.razorpay_order_id;
-                document.querySelector("[name=razorpay_signature]").value = response.razorpay_signature;
-                document.getElementById("payment-form").submit();
-            },
-            "theme": {
-                "color": "#3399cc"
-            }
-        };
-        var rzp = new Razorpay(options);
-        document.getElementById('rzp-button').onclick = function(e){
-            rzp.open();
-            e.preventDefault();
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
         }
-    </script>
+
+        body {
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            padding: 18px;
+            color: white;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        /* ===== PAYMENT CONTAINER ===== */
+        .payment-wrapper {
+            max-width: 1000px;
+            margin: 35px auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+            padding: 0 16px;
+        }
+
+        /* ===== PROJECT CARD ===== */
+        .project-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        .project-box img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        .project-details {
+            padding: 18px;
+        }
+
+        .project-details h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .project-details p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        /* ===== PAYMENT BOX ===== */
+        .pay-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            padding: 22px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pay-box h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .secure-text {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 18px;
+        }
+
+        .pay-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 14px 26px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            width: 100%;
+        }
+
+        .pay-btn:hover {
+            background: #1e3c72;
+            transform: scale(1.03);
+        }
+
+        .trust {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* ===== TABLETS ===== */
+        @media (max-width: 900px) {
+            .payment-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .project-box img {
+                height: 200px;
+            }
+        }
+
+        /* ===== SMALL PHONES ===== */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .project-details h2 {
+                font-size: 18px;
+            }
+
+            .project-details p {
+                font-size: 13px;
+            }
+
+            .price {
+                font-size: 16px;
+            }
+
+            .pay-box h3 {
+                font-size: 18px;
+            }
+
+            .pay-btn {
+                font-size: 15px;
+                padding: 13px;
+            }
+
+            .trust {
+                font-size: 11px;
+            }
+
+            .project-box img {
+                height: 170px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>Secure Checkout</h1>
+</div>
+
+<!-- PAYMENT CONTENT -->
+<div class="payment-wrapper">
+
+    <!-- PROJECT DETAILS -->
+    <div class="project-box">
+        <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}">
+        <div class="project-details">
+            <h2>{{ project.title }}</h2>
+            <p>{{ project.description }}</p>
+            <div class="price">₹{{ project.price }}</div>
+        </div>
+    </div>
+
+    <!-- PAYMENT ACTION -->
+    <div class="pay-box">
+        <h3>Complete Your Payment</h3>
+        <p class="secure-text">
+            You will be redirected to Razorpay's secure payment gateway.
+        </p>
+
+        <button id="rzp-button" class="pay-btn">
+            Pay ₹{{ project.price }}
+        </button>
+
+        <p class="trust">
+            🔒 100% Secure Payments | UPI • Cards • Net Banking
+        </p>
+    </div>
+
+</div>
+
+<!-- RAZORPAY -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    var options = {
+        "key": "{{ key }}",
+        "amount": "{{ amount_in_paise }}",
+        "currency": "INR",
+        "name": "EduStacker Solutions",
+        "description": "{{ project.title }}",
+        "order_id": "{{ order_id }}",
+        "handler": function (response){
+            var form = document.createElement("form");
+            form.method = "POST";
+            form.action = "{% url 'payment_success' %}";
+
+            form.innerHTML = `
+                {% csrf_token %}
+                <input type="hidden" name="razorpay_order_id" value="${response.razorpay_order_id}">
+                <input type="hidden" name="razorpay_payment_id" value="${response.razorpay_payment_id}">
+                <input type="hidden" name="razorpay_signature" value="${response.razorpay_signature}">
+            `;
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    };
+
+    var rzp1 = new Razorpay(options);
+    document.getElementById('rzp-button').onclick = function(e){
+        rzp1.open();
+        e.preventDefault();
+    }
+</script>
+
 </body>
 </html>
