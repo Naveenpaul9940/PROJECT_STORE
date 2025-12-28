@@ -14,15 +14,15 @@ class Project(models.Model):
 
 
 class Payment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     razorpay_order_id = models.CharField(max_length=200)
     razorpay_payment_id = models.CharField(max_length=200, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=500, blank=True, null=True)
 
-    amount = models.IntegerField()  # in paise
-    status = models.CharField(max_length=20, default="CREATED")  
+    amount = models.IntegerField()
+    status = models.CharField(max_length=20, default="CREATED")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
