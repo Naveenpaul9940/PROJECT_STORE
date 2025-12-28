@@ -42,10 +42,12 @@ def pay(request, project_id):
             time.sleep(1)  # wait before retry
 
     Payment.objects.create(
-        project=project,
-        razorpay_order_id=order["id"],
-        status="CREATED"
-    )
+    user=request.user if request.user.is_authenticated else None,
+    project=project,
+    razorpay_order_id=order["id"],
+    amount=amount,
+    status="CREATED"
+)
 
     return render(request, "store/payment.html", {
         "project": project,
