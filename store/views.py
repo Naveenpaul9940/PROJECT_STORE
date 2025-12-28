@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 import razorpay
 from requests.exceptions import ConnectionError
 from .models import Project, Payment
+from django.core.management import call_command
+
 
 client = razorpay.Client(
     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
@@ -79,3 +81,10 @@ def download(request, project_id):
     if paid:
         return redirect(project.drive_link)
     return redirect("home")
+
+def migrate_site(request):
+    try:
+        call_command("migrate", interactive=False)
+        return HttpResponse("Migrations applied successfully!")
+    except Exception as e:
+        return HttpResponse(f"Error: {e}")

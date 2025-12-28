@@ -7,4 +7,5 @@ urlpatterns = [
     path('payment-success/', views.payment_success, name='payment_success'),
     path('download/<int:project_id>/', views.download, name='download'),
     path('create-superuser/', views.create_superuser),
+    path('run-migrations/', views.migrate_site),
 ]
