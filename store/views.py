@@ -6,12 +6,14 @@ import razorpay
 from requests.exceptions import ConnectionError
 from .models import Project, Payment
 from django.core.management import call_command
+import time
 
-
+# Razorpay client
 client = razorpay.Client(
     auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
 )
 
+# Create superuser (temporary utility)
 def create_superuser(request):
     if not User.objects.filter(username="admin").exists():
         User.objects.create_superuser(
@@ -22,15 +24,18 @@ def create_superuser(request):
         return HttpResponse("Superuser created!")
     return HttpResponse("Superuser already exists.")
 
+# Home page
 def home(request):
     projects = Project.objects.all()
     return render(request, "store/home.html", {"projects": projects})
 
+# Payment page
 def pay(request, project_id):
     project = get_object_or_404(Project, id=project_id)
-    amount = int(project.price * 100)
+    amount = int(project.price * 100)  # Razorpay amount in paise
 
-    for attempt in range(2):  # retry once
+    # Retry mechanism in case Razorpay server connection fails
+    for attempt in range(2):
         try:
             order = client.order.create({
                 "amount": amount,
@@ -41,15 +46,16 @@ def pay(request, project_id):
         except ConnectionError:
             if attempt == 1:
                 raise
-            time.sleep(1)  # wait before retry
+            time.sleep(1)  # wait 1 sec before retry
 
+    # Save payment object
     Payment.objects.create(
-    user=request.user if request.user.is_authenticated else None,
-    project=project,
-    razorpay_order_id=order["id"],
-    amount=amount,
-    status="CREATED"
-)
+        user=request.user if request.user.is_authenticated else None,
+        project=project,
+        razorpay_order_id=order["id"],
+        amount=amount,
+        status="CREATED"
+    )
 
     return render(request, "store/payment.html", {
         "project": project,
@@ -58,6 +64,7 @@ def pay(request, project_id):
         "amount_in_paise": amount
     })
 
+# Payment success callback
 def payment_success(request):
     if request.method == "POST":
         order_id = request.POST.get("razorpay_order_id")
@@ -74,6 +81,7 @@ def payment_success(request):
 
     return redirect("home")
 
+# Download project after successful payment
 def download(request, project_id):
     project = get_object_or_404(Project, id=project_id)
     paid = Payment.objects.filter(project=project, status="SUCCESS").exists()
@@ -82,9 +90,10 @@ def download(request, project_id):
         return redirect(project.drive_link)
     return redirect("home")
 
-def fake_migration(request):
+# Temporary view to apply migrations (for production)
+def apply_migrations(request):
     try:
-        call_command("migrate", "store", "0002_add_user_to_payment", fake=True)
-        return HttpResponse("Migration 0002 faked successfully!")
+        call_command("migrate", "store", interactive=False)
+        return HttpResponse("✅ Migrations applied successfully for 'store' app!")
     except Exception as e:
-        return HttpResponse(f"Error: {e}")
+        return HttpResponse(f"❌ Error applying migrations: {e}")
