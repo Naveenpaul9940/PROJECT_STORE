@@ -82,9 +82,9 @@ def download(request, project_id):
         return redirect(project.drive_link)
     return redirect("home")
 
-def migrate_site(request):
+def fake_migration(request):
     try:
-        call_command("migrate", interactive=False)
-        return HttpResponse("Migrations applied successfully!")
+        call_command("migrate", "store", "0002_add_user_to_payment", fake=True)
+        return HttpResponse("Migration 0002 faked successfully!")
     except Exception as e:
         return HttpResponse(f"Error: {e}")
