@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth.models import User
 import razorpay
+from requests.exceptions import ConnectionError
 from .models import Project, Payment
 
 client = razorpay.Client(
@@ -27,11 +28,18 @@ def pay(request, project_id):
     project = get_object_or_404(Project, id=project_id)
     amount = int(project.price * 100)
 
-    order = client.order.create({
-        "amount": amount,
-        "currency": "INR",
-        "payment_capture": 1
-    })
+    for attempt in range(2):  # retry once
+        try:
+            order = client.order.create({
+                "amount": amount,
+                "currency": "INR",
+                "payment_capture": 1
+            })
+            break
+        except ConnectionError:
+            if attempt == 1:
+                raise
+            time.sleep(1)  # wait before retry
 
     Payment.objects.create(
         project=project,
