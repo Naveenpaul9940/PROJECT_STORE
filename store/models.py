@@ -11,8 +11,6 @@ class Project(models.Model):
     def __str__(self):
         return self.title
 
-
-
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
